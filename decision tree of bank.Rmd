@@ -1,0 +1,165 @@
+# jai shankar
+
+# bank dataset by decision tree
+
+```{r}
+install.packages("tree")
+library(tree)
+```
+
+
+```{r}
+ bank <- read.csv("~/Desktop/R_all/logistic regression/extra dwnlds/bank-marketing/bank-additional-full.csv")
+```
+
+```{r}
+dim(bank)
+```
+
+
+```{r}
+summary(bank)
+sum(is.na(bank))
+```
+
+```{r}
+library(psych)
+```
+
+```{r}
+str(bank)
+```
+
+
+
+```{r}
+tree.bank =tree(y ~ .,bank)
+summary(tree.bank)
+```
+
+```{r}
+plot(tree.bank)
+text(tree.bank,preety = 0)
+```
+
+```{r}
+tree.bank
+```
+
+```{r}
+set.seed(1)
+train <- sample(1:nrow(bank), 30000)
+test = bank[-train,]
+```
+
+```{r}
+length(test)
+```
+
+```{r}
+tree.bank1 <- tree(y ~. , bank, subset = train)
+tree.pred <- predict(tree.bank1, test, type= "class")
+```
+
+```{r}
+table(tree.pred,test)
+```
+
+
+# pruning
+
+```{r}
+set.seed(1)
+bank.pruned <- cv.tree(tree.bank1,FUN = prune.misclass)
+
+names(bank.pruned)
+bank.pruned
+
+```
+
+```{r}
+par(mfrow = c(1,2))
+plot(bank.pruned$size, bank.pruned$dev, type = "b",
+     col = "red", lwd = 2)
+
+plot(bank.pruned$k, bank.pruned$dev, type = "b",
+     col = "blue", lwd = 2)
+```
+
+```{r}
+pruned.bank = prune.misclass(tree.bank1,best= 7)
+plot(pruned.bank)
+text(pruned.bank, preety = 0)
+```
+
+```{r}
+tree.pred1 <-predict(pruned.bank,test,type = "class")
+table(tree.pred1,test)
+```
+
+
+# bagging
+```{r}
+install.packages("randomForest")
+library(randomForest)
+```
+
+
+```{r}
+set.seed(1)
+bagging.bank <- randomForest(y~. ,
+                             bank,subset = train,
+                             mtry = 10, importance = T)
+```
+
+```{r}
+dim(bank)
+importance(bagging.bank)
+```
+
+```{r}
+importance(bagging.bank)
+```
+# duration age and education are the highest
+
+
+```{r}
+varImpPlot(bagging.bank, col = "red",
+           pch = 10, cex =.50)
+```
+
+```{r}
+bagging.bank
+# 97.5% correct classififcation acc
+```
+
+```{r}
+test.pred.bag = predict(bagging.bank, newdata = bank[-train,], type = "class")
+table(test.pred.bag,bank[-train])
+```
+
+# random forest
+```{r}
+set.seed(24)
+r.bank =randomForest(y ~ .,bank, subset = train,
+                     mtry = 4,importance =TRUE)
+dim(bank)
+```
+
+```{r}
+importance(r.bank)
+```
+
+```{r}
+varImpPlot(r.bank,col ="blue",pch = 10, cex =.5)
+```
+
+```{r}
+r.bank
+```
+
+```{r}
+test.pred.rf = predict(r.bank, newdata = test, type = "class")
+table(test.pred.rf,test)
+```
+
